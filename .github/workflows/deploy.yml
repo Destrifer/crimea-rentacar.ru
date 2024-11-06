@@ -1,0 +1,28 @@
+name: Deploy to Hosting
+
+on:
+  push:
+    branches:
+      - main  # Запускается при пуше в ветку main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        env:
+          HOST_SSH_KEY: ${{ secrets.HOST_SSH_KEY }}
+        run: |
+          echo "$HOST_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 31.31.196.209 >> ~/.ssh/known_hosts
+
+      - name: Deploy via SCP
+        env:
+          HOST_USERNAME: ${{ secrets.HOST_USERNAME }}
+        run: |
+          scp -r ./ $HOST_USERNAME@31.31.196.209:/var/www/u0374744/data/www/crimea-rentacar.ru
