@@ -1,9 +1,9 @@
-name: Deploy to Hosting
+name: Deploy to Server
 
 on:
   push:
     branches:
-      - main  # Запускается при пуше в ветку main
+      - main  # Укажите нужную ветку, например main или master
 
 jobs:
   deploy:
@@ -11,18 +11,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Setup SSH
         env:
-          HOST_SSH_KEY: ${{ secrets.HOST_SSH_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.HOST_SSH_KEY }}
         run: |
-          echo "$HOST_SSH_KEY" > ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 31.31.196.209 >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${secrets.HOST_USERNAME}@crimea-rentacar.ru >> ~/.ssh/known_hosts
 
-      - name: Deploy via SCP
+      - name: Deploy to server
         env:
-          HOST_USERNAME: ${{ secrets.HOST_USERNAME }}
+          USERNAME: ${{ secrets.HOST_USERNAME }}
         run: |
-          scp -r ./ $HOST_USERNAME@31.31.196.209:/var/www/u0374744/data/www/crimea-rentacar.ru
+          rsync -avz --delete --exclude='.git*' ./ ${USERNAME}@crimea-rentacar.ru:/var/www/u0374744/data/www/crimea-rentacar.ru
